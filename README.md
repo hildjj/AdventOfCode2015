@@ -115,5 +115,5 @@ Options:
   --nowait          Do not wait until drop time, for testing
 ```
 
-[![Test Deno Module](https://github.com/hildjj/AdventOfCode2024/actions/workflows/deno.yml/badge.svg)](https://github.com/hildjj/AdventOfCode2024/actions/workflows/deno.yml)
-[![codecov](https://codecov.io/gh/hildjj/AdventOfCode2024/graph/badge.svg?token=B5VBNZ7BOF)](https://codecov.io/gh/hildjj/AdventOfCode2024)
+[![Test Deno Module](https://github.com/hildjj/AdventOfCode2015/actions/workflows/deno.yml/badge.svg)](https://github.com/hildjj/AdventOfCode2015/actions/workflows/deno.yml)
+[![codecov](https://codecov.io/gh/hildjj/AdventOfCode2015/graph/badge.svg?token=B5VBNZ7BOF)](https://codecov.io/gh/hildjj/AdventOfCode2015)

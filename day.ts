@@ -8,7 +8,7 @@ import { adjacentFile, type MainArgs, type MainEntry } from './lib/utils.ts';
 import { CookieJar, wrapFetch } from '$jar';
 import { format } from '@std/fmt/duration';
 
-const YEAR = 2024;
+const YEAR = 2015;
 
 const args = parseArgs(Deno.args, {
   boolean: [
