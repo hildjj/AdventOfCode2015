@@ -1,11 +1,5 @@
 import { Dir, InfiniteRect, Point, PointSet, Rect } from '../rect.ts';
-
-import {
-  assert,
-  assertEquals,
-  assertFalse,
-  assertThrows,
-} from '$std/assert/mod.ts';
+import { assert, assertEquals, assertFalse, assertThrows } from '@std/assert';
 
 Deno.test('Point', async (t) => {
   await t.step('modifications', () => {

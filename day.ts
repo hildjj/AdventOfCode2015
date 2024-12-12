@@ -1,9 +1,9 @@
 #!/usr/bin/env -S deno run -A
 
 import $ from '$dax';
-import { assertEquals } from '$std/assert/mod.ts';
-import { fromFileUrl, parse as pathParse } from '$std/path/mod.ts';
-import { parseArgs } from '$std/cli/parse_args.ts';
+import { assertEquals } from '@std/assert';
+import { fromFileUrl, parse as pathParse } from '@std/path';
+import { parseArgs } from '@std/cli';
 import { adjacentFile, type MainArgs, type MainEntry } from './lib/utils.ts';
 import { CookieJar, wrapFetch } from '$jar';
 import { format } from '@std/fmt/duration';
@@ -95,7 +95,7 @@ if (!args.day) {
 export async function checkin(a: MainArgs): Promise<void> {
   await $`deno task check`;
   await $`cd inputs && git add day${a.day}.txt && git ci --no-verify -m "Day ${a.day}" && git push`;
-  await $`git add . && git ci-m "Day ${a.day}" && git push && gh pr create --fill`;
+  await $`git add . && git ci -m "Day ${a.day}" && git push && gh pr create --fill`;
 }
 
 export async function newDay(a: MainArgs): Promise<void> {
