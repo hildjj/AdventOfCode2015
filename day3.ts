@@ -6,7 +6,7 @@ type SantaDir = '<' | '>' | '^' | 'v';
 type Parsed = SantaDir[];
 type DirMap = {
   [d in SantaDir]: Dir;
-}
+};
 const dirMap: DirMap = {
   '^': Dir.N,
   '>': Dir.E,
