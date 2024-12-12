@@ -95,7 +95,7 @@ if (!args.day) {
 export async function checkin(a: MainArgs): Promise<void> {
   await $`deno task check`;
   await $`cd inputs && git add day${a.day}.txt && git ci --no-verify -m "Day ${a.day}" && git push`;
-  await $`git add . && git ci-m "Day ${a.day}" && git push && gh pr create --fill`;
+  await $`git add . && git ci -m "Day ${a.day}" && git push && gh pr create --fill`;
 }
 
 export async function newDay(a: MainArgs): Promise<void> {
