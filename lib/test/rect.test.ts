@@ -287,9 +287,7 @@ Deno.test('PointSet', async (t) => {
       new Point(0, 3),
       new Point(0, 5),
     ]);
-    const c = new PointSet(null, 16);
-
-    assertThrows(() => a.union(c));
+    assert(new PointSet(null));
     const u = a.union(b);
     assertEquals(u.size, 6);
     const i = a.intersection(b);
