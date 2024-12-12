@@ -4,7 +4,7 @@ import {
   assertEquals,
   assertFalse,
   assertThrows,
-} from '$std/assert/mod.ts';
+} from '@std/assert';
 
 Deno.test('Sequence', async (t) => {
   await t.step('isIterable', () => {
