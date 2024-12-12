@@ -1,11 +1,17 @@
 import { type MainArgs, parseFile } from './lib/utils.ts';
-import { md5 } from '@takker/md5';
+// deno-lint-ignore no-external-import
+import { createHash } from 'node:crypto';
 
 type Parsed = string;
+const enc = new TextEncoder();
 
 function part1(inp: Parsed): number {
+  const orig = createHash('MD5');
+  orig.update(enc.encode(inp));
   for (let i = 0; i < Infinity; i++) {
-    const hash = new Uint8Array(md5(`${inp}${i}`));
+    const m = orig.copy();
+    m.update(enc.encode(String(i)));
+    const hash = m.digest();
     if ((hash[0] === 0) && (hash[1] === 0) && ((hash[2] & 0xf0) === 0)) {
       return i;
     }
@@ -14,8 +20,12 @@ function part1(inp: Parsed): number {
 }
 
 function part2(inp: Parsed): number {
+  const orig = createHash('MD5');
+  orig.update(enc.encode(inp));
   for (let i = 0; i < Infinity; i++) {
-    const hash = new Uint8Array(md5(`${inp}${i}`));
+    const m = orig.copy();
+    m.update(enc.encode(String(i)));
+    const hash = m.digest();
     if ((hash[0] === 0) && (hash[1] === 0) && (hash[2] === 0)) {
       return i;
     }
