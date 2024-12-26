@@ -138,15 +138,40 @@ export class Point implements PointLike {
     return ret;
   }
 
-  *box(r?: Rect): Generator<[Point, BoxDir], undefined, undefined> {
+  *box(r?: Rect | PointSet): Generator<[Point, BoxDir], undefined, undefined> {
     for (const dir of AllBoxDirs) {
       const [dx, dy] = Point.BOX[dir];
       const p = this.xlate(dx, dy);
-      if (r && !r.check(p)) {
+      if (r && !r.has(p)) {
         continue;
       }
       yield [p, dir];
     }
+  }
+
+  boxMap(r?: Rect | PointSet): Map<BoxDir, Point> {
+    const ret = new Map<BoxDir, Point>();
+    for (const dir of AllBoxDirs) {
+      const [dx, dy] = Point.BOX[dir];
+      const p = this.xlate(dx, dy);
+      if (r && !r.has(p)) {
+        continue;
+      }
+      ret.set(dir, p);
+    }
+    return ret;
+  }
+
+  boxSet(r: Rect | PointSet): Set<BoxDir> {
+    const ret = new Set<BoxDir>();
+    for (const dir of AllBoxDirs) {
+      const [dx, dy] = Point.BOX[dir];
+      const p = this.xlate(dx, dy);
+      if (r.has(p)) {
+        ret.add(dir);
+      }
+    }
+    return ret;
   }
 
   toString(): string {
@@ -264,6 +289,10 @@ export class Rect<T = string> {
     const [x, y] = (typeof xp === 'number') ? [xp, yp!] : [xp.x, xp.y];
     return (y >= 0) && (y < this.#vals.length) &&
       (x >= 0) && (x < this.#vals[y].length);
+  }
+
+  has(p: PointLike): boolean {
+    return this.check(p);
   }
 
   /**
@@ -404,6 +433,12 @@ export class Rect<T = string> {
       }
     });
     return prev;
+  }
+
+  fill(val: T): void {
+    for (let y = 0; y < this.height; y++) {
+      this.#vals[y].fill(val);
+    }
   }
 
   filter(callbackFn: RectFilterCallback<T>): Point[] {
@@ -668,6 +703,21 @@ export class PointSet {
   }
 
   /**
+   * Is this sthe first time this point has been seen?
+   * Adds the point if so.
+   *
+   * @param value
+   */
+  first(value: Point): boolean {
+    const n = value.toNumber();
+    if (this.#set.has(n)) {
+      return false;
+    }
+    this.#set.add(n);
+    return true;
+  }
+
+  /**
    * @returns the number of (unique) elements in Set.
    */
   get size(): number {
@@ -773,6 +823,13 @@ export class PointSet {
     return this.#set.isDisjointFrom(other.#set);
   }
 
+  withAdded(value: Point): PointSet {
+    const n = new PointSet();
+    n.#set = new Set(this.#set);
+    n.add(value);
+    return n;
+  }
+
   [Symbol.for('Deno.customInspect')](): string {
     let ret = `PointSet(${this.size}) { `;
     let first = true;
@@ -789,5 +846,174 @@ export class PointSet {
     }
     ret += '}';
     return ret;
+  }
+}
+
+export type PointMapTransformCallback<T, U> = (
+  prev: U,
+  value: T,
+  x: number,
+  y: number,
+  r: PointMap<T>,
+) => U;
+
+export class PointMap<T> implements Map<Point, T> {
+  #map = new Map<number, T>();
+
+  constructor(iterable?: Iterable<readonly [Point, T]> | null) {
+    if (iterable) {
+      for (const [p, v] of iterable) {
+        this.#map.set(p.toNumber(), v);
+      }
+    }
+  }
+
+  set(p: Point, v: T): this {
+    this.#map.set(p.toNumber(), v);
+    return this;
+  }
+
+  get(p: Point): T | undefined {
+    return this.#map.get(p.toNumber());
+  }
+
+  clear(): void {
+    this.#map.clear();
+  }
+
+  forEach(
+    callbackfn: (value: T, key: Point, map: Map<Point, T>) => void,
+    thisArg?: unknown,
+  ): void {
+    // deno-lint-ignore no-this-alias
+    const m = this;
+    this.#map.forEach(
+      function (v, p): void {
+        callbackfn(v, Point.fromNumber(p), m as unknown as Map<Point, T>);
+      },
+      thisArg,
+    );
+  }
+
+  /**
+   * @returns true if an element in the Map existed and has been removed, or
+   * false if the element does not exist.
+   */
+  delete(key: Point): boolean {
+    return this.#map.delete(key.toNumber());
+  }
+
+  has(key: Point): boolean {
+    return this.#map.has(key.toNumber());
+  }
+
+  get size(): number {
+    return this.#map.size;
+  }
+
+  *keys(): MapIterator<Point> {
+    for (const k of this.#map.keys()) {
+      yield Point.fromNumber(k);
+    }
+  }
+
+  *entries(): MapIterator<[Point, T]> {
+    for (const [k, v] of this.#map.entries()) {
+      yield [Point.fromNumber(k), v];
+    }
+  }
+
+  values(): MapIterator<T> {
+    return this.#map.values();
+  }
+
+  *[Symbol.iterator](): MapIterator<[Point, T]> {
+    for (const [k, v] of this.#map) {
+      yield [Point.fromNumber(k), v];
+    }
+  }
+
+  get [Symbol.toStringTag](): string {
+    return 'PointSet';
+  }
+
+  /**
+   * Run a reducer over the contents of the map.  If initial value not
+   * specified, calls callbackFn for the first time with
+   * (m[0], m[1], 1, 0, r).
+   *
+   * @param callbackFn
+   * @param initial
+   * @returns
+   */
+  reduce<U = T>(
+    callbackFn: PointMapTransformCallback<T, U>,
+    initial?: U,
+  ): U | undefined {
+    let first = initial === undefined;
+    let prev = initial;
+    this.forEach((val, p) => {
+      if (first) {
+        first = false;
+        prev = val as unknown as U;
+      } else {
+        prev = callbackFn.call(this, prev!, val, p.x, p.y, this);
+      }
+    });
+    return prev;
+  }
+}
+
+export interface ForestPoint {
+  parent: ForestPoint; // TODO(@hildjj): Redo with parent?: ForestPoint
+  size: number;
+  data: number;
+}
+
+export class PointForest {
+  #all = new PointMap<ForestPoint>();
+
+  add(p: Point, data: number): void {
+    const fp = this.#all.get(p);
+    if (!fp) {
+      const f = {
+        parent: undefined as (ForestPoint | undefined),
+        size: 1,
+        data,
+      };
+      f.parent = f as ForestPoint;
+      this.#all.set(p, f as ForestPoint);
+    } else {
+      throw new Error(`Dup! ${p}`);
+    }
+  }
+
+  #find(p: Point): ForestPoint | undefined {
+    let fp = this.#all.get(p);
+    if (!fp) {
+      return undefined;
+    }
+    while (fp.parent !== fp) {
+      // Reset parents as we traverse up.
+      // This is why x.parent = x at the top, so that grandparent always works.
+      [fp, fp.parent] = [fp.parent, fp.parent.parent];
+      fp = fp.parent;
+    }
+    return fp;
+  }
+
+  union(a: Point, b: Point): number | undefined {
+    let afp = this.#find(a);
+    let bfp = this.#find(b);
+    if (!afp || !bfp || (afp === bfp)) {
+      return undefined; // Already in the same set, or one of the points isn't in the set.
+    }
+    if (afp.size < bfp.size) {
+      [afp, bfp] = [bfp, afp];
+    }
+    bfp.parent = afp;
+    afp.size += bfp.size;
+    afp.data |= bfp.data;
+    return afp.data;
   }
 }
