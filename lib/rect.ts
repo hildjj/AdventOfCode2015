@@ -138,7 +138,9 @@ export class Point implements PointLike {
     return ret;
   }
 
-  *box(r?: Rect | PointSet): Generator<[Point, BoxDir], undefined, undefined> {
+  *box<T>(
+    r?: Rect<T> | PointSet,
+  ): Generator<[Point, BoxDir], undefined, undefined> {
     for (const dir of AllBoxDirs) {
       const [dx, dy] = Point.BOX[dir];
       const p = this.xlate(dx, dy);
